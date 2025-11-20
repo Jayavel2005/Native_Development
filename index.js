@@ -1,26 +1,31 @@
+const http = require("http");
 const ws = require("ws")
 
-const wss = new ws.Server({ port: 8080 });
+const server = http.createServer();
+const wss = new ws.Server({server});
 
 wss.on("connection", (socket)=>{
-    console.log("New client connected");
+    console.log("Client is connected");
 
-    socket.send("Welcome new client!");
-
-    socket.on("message", (message)=>{
-        console.log(`Received message: ${message}`);
-        socket.send(`Echo: ${message}`);
-    })
-
-    setInterval(() => {
-        console.log(`Total Connected Clients ${wss.clients.size}`);
+    socket.on("message", (data)=>{
+        console.log("Message received: ", data.toString())
         
-    }, 1000);
+
+        wss.clients.forEach((client)=>{
+            if(client.readyState === ws.OPEN){
+                client.send(data.toString());
+            }
+        });
+    });
 
     socket.on("close", ()=>{
         console.log("Client disconnected");
     })
+    
 })
+console.log("Server is waiting for the client");
 
 
-console.log(`Socket is running on ws://localhost:8080`);
+server.listen(8080, ()=>{
+    console.log(`Server is listening on port ws://localhost:8080`);
+})
